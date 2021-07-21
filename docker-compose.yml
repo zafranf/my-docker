@@ -1,0 +1,149 @@
+version: "3"
+
+services:
+    nginx:
+        hostname: nginx
+        container_name: nginx
+        image: nginx:latest
+        ports:
+            - 80:80
+            - 443:443
+        volumes:
+            - ~/Sites:/var/www:cached
+            - ./nginx/conf:/etc/nginx/conf.d:cached
+            - ./nginx/ssl:/etc/nginx/ssl:cached
+        links:
+            - php
+            - php74
+            - php80
+            - nodejs
+        networks:
+            app-network:
+                aliases:
+                    - api.sm.ap
+                    - 3000.nodejs.ap
+                    - 3001.nodejs.ap
+                    - 1215.swoole.ap
+                    - 2510.swoole.ap
+    php:
+        hostname: php
+        container_name: php
+        build: ./php/
+        volumes:
+            - ~/Sites:/var/www:cached
+        working_dir: /var/www
+        expose:
+            - "1215"
+            - "2510"
+        ports:
+            - "1215:1215"
+            - "2510:2510"
+        links:
+            - mariadb
+            - mongo
+            - redis
+        networks:
+            app-network:
+                aliases:
+                    - api.sm.ap
+                    - 3000.nodejs.ap
+                    - 3001.nodejs.ap
+                    - 1215.swoole.ap
+                    - 2510.swoole.ap
+    php74:
+        hostname: php74
+        container_name: php74
+        build: ./php74/
+        volumes:
+            - ~/Sites:/var/www:cached
+        working_dir: /var/www
+        links:
+            - mariadb
+            - mongo
+            - redis
+        networks:
+            app-network:
+                aliases:
+                    - api.sm.ap
+                    - 3000.nodejs.ap
+                    - 3001.nodejs.ap
+                    - 1215.swoole.ap
+                    - 2510.swoole.ap
+    php80:
+        hostname: php80
+        container_name: php80
+        build: ./php80/
+        volumes:
+            - ~/Sites:/var/www:cached
+        working_dir: /var/www
+        expose:
+            - "8000"
+        ports:
+            - "8000:8000"
+        links:
+            - mariadb
+            - mongo
+            - redis
+        networks:
+            app-network:
+                aliases:
+                    - api.sm.ap
+                    - 3000.nodejs.ap
+                    - 3001.nodejs.ap
+                    - 1215.swoole.ap
+                    - 2510.swoole.ap
+    nodejs:
+        hostname: nodejs
+        container_name: nodejs
+        build: ./nodejs/
+        environment:
+            NODE_ENV: development
+        volumes:
+            - ~/Sites:/var/www:cached
+        links:
+            - mariadb
+            - mongo
+            - redis
+        networks:
+            app-network:
+                aliases:
+                    - api.sm.ap
+                    - 3000.nodejs.ap
+                    - 3001.nodejs.ap
+                    - 1215.swoole.ap
+                    - 2510.swoole.ap
+    mariadb:
+        hostname: mariadb
+        container_name: mariadb
+        image: mariadb:latest
+        ports:
+            - 3306:3306
+        environment:
+            MYSQL_ROOT_PASSWORD: password
+        volumes:
+            - ~/Sites:/var/www:cached
+        networks:
+            - app-network
+    mongo:
+        hostname: mongo
+        container_name: mongo
+        image: mongo:latest
+        ports:
+            - 27017:27017
+        volumes:
+            - ~/Sites:/var/www:cached
+        networks:
+            - app-network
+    redis:
+        hostname: redis
+        container_name: redis
+        image: redis:latest
+        ports:
+            - 6379:6379
+        volumes:
+            - ~/Sites:/var/www:cached
+        networks:
+            - app-network
+networks:
+    app-network:
+        driver: bridge
